@@ -1,13 +1,27 @@
 package kh.edu.rupp.fe.ruppmad;
 
 import android.app.Fragment;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import kh.edu.rupp.fe.ruppmad.adapter.Document;
 import kh.edu.rupp.fe.ruppmad.adapter.DocumentsAdapter;
@@ -18,7 +32,9 @@ import kh.edu.rupp.fe.ruppmad.adapter.RecyclerViewItemClickListener;
  * Created by leapkh on 7/3/17.
  */
 
-public class DocumentsFragment extends Fragment implements RecyclerViewItemClickListener {
+public class DocumentsFragment extends Fragment implements RecyclerViewItemClickListener, SwipeRefreshLayout.OnRefreshListener {
+
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     private RecyclerView rclDocuments;
     private DocumentsAdapter adapter;
@@ -28,6 +44,10 @@ public class DocumentsFragment extends Fragment implements RecyclerViewItemClick
 
         View fragmentView = inflater.inflate(R.layout.fragment_documents, container, false);
 
+        // Swife to refresh layout
+        swipeRefreshLayout = (SwipeRefreshLayout)fragmentView.findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setOnRefreshListener(this);
+
         // Reference to RecyclerView
         rclDocuments = (RecyclerView)fragmentView.findViewById(R.id.rcl_documents);
 
@@ -36,26 +56,78 @@ public class DocumentsFragment extends Fragment implements RecyclerViewItemClick
         rclDocuments.setLayoutManager(layoutManager);
 
         // Adapter
-        adapter = new DocumentsAdapter(loadDocuments());
+        Document[] emptyDocs = new Document[0];
+        adapter = new DocumentsAdapter(emptyDocs);
         adapter.setRecyclerViewItemClickListener(this);
         rclDocuments.setAdapter(adapter);
 
         return fragmentView;
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        loadDocuments();
+    }
+
     // Temporary List of Documents
-    private Document[] loadDocuments(){
-        Document d1 = new Document("Ch. 1: Introduction to Mobile App Dev", "", 1);
-        Document d2 = new Document("Ch. 2: Google Play Store", "", 2);
-        Document d3 = new Document("Ch. 3: Android Studio", "", 1);
-        Document d4 = new Document("Ch. 4: Drawer Layout", "", 3);
-        Document d5 = new Document("Ch. 5: Recycler View", "", 2);
-        Document[] documents = {d1, d2, d3, d4, d5};
-        return documents;
+    private void loadDocuments(){
+        Log.d("rupp", "Start loading documents");
+        swipeRefreshLayout.setRefreshing(true);
+        RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
+        String url = "http://10.0.2.2/test/ruppmad-api/";
+        final JsonArrayRequest request = new JsonArrayRequest(url, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                // Convert response to Document objects
+                // Apply document objects to adapter
+                Log.d("rupp", "Loaded documents success");
+                Document[] documents = new Document[response.length()];
+                boolean isError = false;
+                Gson gson = new Gson();
+                for(int i=0; i<response.length(); i++){
+                    try {
+                        JSONObject jsonObject = response.getJSONObject(i);
+                        Document document = gson.fromJson(jsonObject.toString(), Document.class);
+                        documents[i] = document;
+                    } catch (JSONException e) {
+                        Log.d("rupp", "Error converting documents");
+                        isError = true;
+                    }
+                }
+                if(isError){
+                    Toast.makeText(getActivity(), "Error while loading docuements", Toast.LENGTH_LONG).show();
+                }
+                swipeRefreshLayout.setRefreshing(false);
+                adapter.setDocuments(documents);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getActivity(), "Error while loading docuements", Toast.LENGTH_LONG).show();
+                Log.d("rupp", "Error load docs: " + error.getMessage());
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+        requestQueue.add(request);
     }
 
     @Override
     public void onRecyclerViewItemClick(int position) {
         Log.d("rupp", "Recycler item click: " + position);
+        Document document = adapter.getDocument(position);
+        Gson gson = new Gson();
+        String serializedDocument = gson.toJson(document);
+        Intent intent = new Intent(getActivity(), DocumentActivity.class);
+        intent.putExtra("serializedDocument", serializedDocument);
+        startActivity(intent);
+    }
+
+    @Override
+    public void onRefresh() {
+        Log.d("rupp", "On refresh");
+        // Check update from server
+        loadDocuments();
     }
 }

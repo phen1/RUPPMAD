@@ -10,6 +10,8 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import kh.edu.rupp.fe.ruppmad.db.DbManager;
+
 public class LoginActivity extends Activity implements View.OnClickListener {
 
     public static final String KEY_USERNAME = "username";
@@ -42,6 +44,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
             EditText etxtPassword = (EditText) findViewById(R.id.etxt_password);
             String password = etxtPassword.getText().toString();
             if (username.equals(USERNAME) && password.equals(PASSWORD)){
+                insertLoginHistory();
 
                 // Check remember me
                 CheckBox chkRemeberMe = (CheckBox)findViewById(R.id.chk_remember_me);
@@ -54,6 +57,11 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                 Toast.makeText(this, "Invalid username or password", Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    private void insertLoginHistory(){
+        DbManager dbManager = new DbManager(this);
+        dbManager.insertLoginHistory(System.currentTimeMillis());
     }
 
     private void rememberLoggedIn(String username){

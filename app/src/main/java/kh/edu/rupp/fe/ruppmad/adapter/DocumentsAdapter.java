@@ -28,6 +28,10 @@ public class DocumentsAdapter extends RecyclerView.Adapter<DocumentsAdapter.Docu
         notifyDataSetChanged();
     }
 
+    public Document getDocument(int position){
+        return documents[position];
+    }
+
     public void setRecyclerViewItemClickListener(RecyclerViewItemClickListener recyclerViewItemClickListener) {
         this.recyclerViewItemClickListener = recyclerViewItemClickListener;
     }
@@ -47,6 +51,7 @@ public class DocumentsAdapter extends RecyclerView.Adapter<DocumentsAdapter.Docu
         Document document = documents[position];
         holder.txtTitle.setText(document.getTitle());
         holder.txtSize.setText(document.getFormatSize());
+        holder.txtHits.setText("Hits: " + document.getHits());
 
     }
 
@@ -60,6 +65,7 @@ public class DocumentsAdapter extends RecyclerView.Adapter<DocumentsAdapter.Docu
         private ImageView imgThumbnail;
         private TextView txtTitle;
         private TextView txtSize;
+        private TextView txtHits;
 
         public DocumentViewHolder(View itemView) {
             super(itemView);
@@ -67,6 +73,7 @@ public class DocumentsAdapter extends RecyclerView.Adapter<DocumentsAdapter.Docu
             imgThumbnail = (ImageView)itemView.findViewById(R.id.img_thumbnail);
             txtTitle = (TextView)itemView.findViewById(R.id.txt_title);
             txtSize = (TextView)itemView.findViewById(R.id.txt_size);
+            txtHits = (TextView)itemView.findViewById(R.id.txt_hits);
 
             itemView.setOnClickListener(this);
 

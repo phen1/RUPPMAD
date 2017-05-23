@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         View navigationHeaderView = navigationView.getHeaderView(0);
         navigationHeaderView.findViewById(R.id.txt_edit).setOnClickListener(this);
         navigationHeaderView.findViewById(R.id.txt_logout).setOnClickListener(this);
+        navigationHeaderView.findViewById(R.id.img_profile).setOnClickListener(this);
 
         // Actionbar Drawer
         ActionBarDrawerToggle drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open, R.string.close);
@@ -70,6 +71,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (view.getId()) {
             case R.id.txt_logout:
                 doLogout();
+                break;
+            case R.id.img_profile:
+                startActivity(new Intent(this, ProfileActivity.class));
                 break;
         }
     }
